@@ -20,9 +20,7 @@ description:
         This Python script fetches 5-day weather forecast data from the OpenWeatherMap API for a specified city. It then visualizes key weather parameters like temperature, humidity, and wind speed over time using Matplotlib. The script generates a "dashboard" of plots saved as a PNG image, offering a clear overview of the predicted weather conditions.
 
 
+OUTPUT:
 
-output:
-
-
-     ![Image](https://github.com/user-attachments/assets/5036ab60-82c9-44d1-b257-968207821cce)
+![Image](https://github.com/user-attachments/assets/5036ab60-82c9-44d1-b257-968207821cce)
         
