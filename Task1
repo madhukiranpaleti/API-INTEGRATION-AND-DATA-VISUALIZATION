@@ -1,0 +1,121 @@
+import requests
+import matplotlib.pyplot as plt
+from datetime import datetime
+
+def get_weather_data(city_name, api_key):
+    """
+    Fetches 5-day weather forecast data for a given city from OpenWeatherMap API.
+
+    Args:
+        city_name (str): The name of the city.
+        api_key (str): Your OpenWeatherMap API key.
+
+    Returns:
+        dict: JSON response containing weather data, or None if an error occurs.
+    """
+    base_url = "http://api.openweathermap.org/data/2.5/forecast"
+    params = {
+        "q": city_name,
+        "appid": api_key,
+        "units": "metric"  # Get temperature in Celsius
+    }
+    try:
+        response = requests.get(base_url, params=params)
+        response.raise_for_status()  # Raise an HTTPError for bad responses (4xx or 5xx)
+        return response.json()
+    except requests.exceptions.HTTPError as http_err:
+        print(f"HTTP error occurred: {http_err} - Status Code: {response.status_code}")
+        print(f"Response: {response.text}")
+    except requests.exceptions.ConnectionError as conn_err:
+        print(f"Connection error occurred: {conn_err}")
+    except requests.exceptions.Timeout as timeout_err:
+        print(f"Timeout error occurred: {timeout_err}")
+    except requests.exceptions.RequestException as req_err:
+        print(f"An unexpected error occurred: {req_err}")
+    return None
+
+def visualize_weather_data(data, city_name):
+    """
+    Visualizes temperature, humidity, and wind speed over time.
+
+    Args:
+        data (dict): Parsed JSON weather data.
+        city_name (str): The name of the city for plot titles.
+    """
+    if not data or "list" not in data:
+        print("No data available for visualization or invalid data format.")
+        return
+
+    timestamps = []
+    temperatures = []
+    humidities = []
+    wind_speeds = []
+
+    # Extract relevant data
+    for item in data["list"]:
+        # Convert timestamp to a readable datetime object
+        dt_object = datetime.fromtimestamp(item["dt"])
+        timestamps.append(dt_object)
+        temperatures.append(item["main"]["temp"])
+        humidities.append(item["main"]["humidity"])
+        wind_speeds.append(item["wind"]["speed"])
+
+    # Create the visualization dashboard (multiple plots)
+    plt.style.use('seaborn-v0_8-darkgrid') # Use a nice style for plots
+
+    fig, axes = plt.subplots(3, 1, figsize=(14, 18)) # 3 rows, 1 column of plots
+    fig.suptitle(f"5-Day Weather Forecast for {city_name}", fontsize=20, y=1.02)
+
+    # Plot 1: Temperature
+    axes[0].plot(timestamps, temperatures, marker='o', linestyle='-', color='#FF5733', label='Temperature (°C)')
+    axes[0].set_title("Temperature Over Time", fontsize=16)
+    axes[0].set_ylabel("Temperature (°C)", fontsize=12)
+    axes[0].grid(True, linestyle='--', alpha=0.7)
+    axes[0].tick_params(axis='x', rotation=45)
+    axes[0].legend()
+    axes[0].set_facecolor('#f0f0f0') # Light grey background for plot area
+
+    # Plot 2: Humidity
+    axes[1].plot(timestamps, humidities, marker='s', linestyle='--', color='#3366FF', label='Humidity (%)')
+    axes[1].set_title("Humidity Over Time", fontsize=16)
+    axes[1].set_ylabel("Humidity (%)", fontsize=12)
+    axes[1].grid(True, linestyle='--', alpha=0.7)
+    axes[1].tick_params(axis='x', rotation=45)
+    axes[1].legend()
+    axes[1].set_facecolor('#f0f0f0')
+
+    # Plot 3: Wind Speed
+    axes[2].plot(timestamps, wind_speeds, marker='^', linestyle=':', color='#33CC33', label='Wind Speed (m/s)')
+    axes[2].set_title("Wind Speed Over Time", fontsize=16)
+    axes[2].set_xlabel("Date and Time", fontsize=12)
+    axes[2].set_ylabel("Wind Speed (m/s)", fontsize=12)
+    axes[2].grid(True, linestyle='--', alpha=0.7)
+    axes[2].tick_params(axis='x', rotation=45)
+    axes[2].legend()
+    axes[2].set_facecolor('#f0f0f0')
+
+    plt.tight_layout(rect=[0, 0.03, 1, 0.98]) # Adjust layout to prevent title overlap
+    
+    # Save the dashboard to a file
+    output_filename = f"{city_name}_weather_dashboard.png"
+    plt.savefig(output_filename, dpi=300, bbox_inches='tight')
+    print(f"\nWeather dashboard saved as '{output_filename}'")
+    plt.show() # Display the plot
+
+if __name__ == "__main__":
+    # --- Configuration ---
+    YOUR_API_KEY = "a0f57c53e0f3c68d801c473e76722ce3"  # <<< IMPORTANT: Replace with your actual OpenWeatherMap API key
+    CITY_NAME = "Visakhapatnam" # You can change this to any city you want
+
+    if YOUR_API_KEY == "YOUR_API_KEY":
+        print("Please replace 'YOUR_API_KEY' with your actual OpenWeatherMap API key.")
+        print("You can get one for free from: https://openweathermap.org/api")
+    else:
+        print(f"Fetching weather data for {CITY_NAME}...")
+        weather_data = get_weather_data(CITY_NAME, YOUR_API_KEY)
+
+        if weather_data:
+            print("Data fetched successfully. Generating visualizations...")
+            visualize_weather_data(weather_data, CITY_NAME)
+        else:
+            print("Failed to fetch weather data. Please check your API key and city name.")
